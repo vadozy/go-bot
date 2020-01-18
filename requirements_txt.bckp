@@ -1,0 +1,16 @@
+numpy
+keras == 2.3
+tensorflow == 1.15
+pylint
+pytest
+mypy
+
+#  numpy
+#  keras >= 2.0.0
+#  flask
+#  flask-cors
+#  future
+#  h5py
+#  tensorflow
+#  six
+#  gomill
