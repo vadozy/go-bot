@@ -1,5 +1,4 @@
 from __future__ import annotations
-from .scoring import compute_game_result
 import copy
 from .gotypes import Player, Point
 from typing import Iterable, Dict, Optional, List, Tuple, cast
@@ -103,16 +102,16 @@ class Board:
         return 1 <= point.row <= self.num_rows and 1 <= point.col <= self.num_cols
 
     def neighbors(self, point: Point) -> List[Point]:
+        return self.points_at_delta(point, [(0, 1), (0, -1), (-1, 0), (1, 0)])
+
+    def points_at_delta(self, point: Point, deltas: Iterable[Tuple[int, int]]) -> List[Point]:
         # assert self.is_on_grid(point)
         ret = []
-        if point.row > 1:
-            ret.append(Point(point.row - 1, point.col))
-        if point.col > 1:
-            ret.append(Point(point.row - 1, point.col))
-        if point.row < self.num_rows:
-            ret.append(Point(point.row + 1, point.col))
-        if point.col < self.num_cols:
-            ret.append(Point(point.row, point.col + 1))
+        for delta_r, delta_c in deltas:
+            new_row = point.row + delta_r
+            new_col = point.col + delta_c
+            if 1 <= new_row <= self.num_rows and 1 <= new_col <= self.num_cols:
+                ret.append(Point(new_row, new_col))
         return ret
 
     def get(self, point: Point) -> Optional[Player]:
@@ -129,9 +128,9 @@ class Board:
 
     def __eq__(self, other) -> bool:
         return isinstance(other, Board) and \
-            self.num_rows == other.num_rows and \
-            self.num_cols == other.num_cols and \
-            self._grid == other._grid
+               self.num_rows == other.num_rows and \
+               self.num_cols == other.num_cols and \
+               self._grid == other._grid
 
 
 class GameState:
@@ -186,9 +185,9 @@ class GameState:
         if move.is_pass or move.is_resign:
             return True
         return (
-            self.board.get(cast(Point, move.point)) is None and
-            not self.is_move_self_capture(self.next_player, move) and
-            not self.does_move_violate_ko(self.next_player, move))
+                self.board.get(cast(Point, move.point)) is None and
+                not self.is_move_self_capture(self.next_player, move) and
+                not self.does_move_violate_ko(self.next_player, move))
 
     def is_over(self) -> bool:
         if self.last_move is None:
@@ -214,6 +213,7 @@ class GameState:
         return moves
 
     def winner(self) -> Optional[Player]:
+        from .scoring import compute_game_result  # Cannot move import to the top, because of circular dependency
         if not self.is_over():
             return None
         if self.last_move and self.last_move.is_resign:

@@ -16,5 +16,5 @@ class Point(NamedTuple):
     row: int
     col: int
 
-    def __deepcopy__(self) -> Point:
+    def __deepcopy__(self, memodict=None) -> Point:
         return self

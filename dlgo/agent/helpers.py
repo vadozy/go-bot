@@ -21,21 +21,16 @@ def is_point_an_eye(board: Board, point: Point, color: Player):
         if neighbor_color != color:
             return False
 
+    corners: List[Point] = board.points_at_delta(point, [(-1, -1), (-1, 1), (1, -1), (1, 1)])
+    off_board_corners: int = 4 - len(corners)
     friendly_corners: int = 0
-    off_board_corners: int = 0
-    corners: List[Point] = [
-        Point(point.row - 1, point.col - 1),
-        Point(point.row - 1, point.col + 1),
-        Point(point.row + 1, point.col - 1),
-        Point(point.row + 1, point.col + 1),
-    ]
+
     for corner in corners:
-        if board.is_on_grid(corner):
-            corner_color = board.get(corner)
-            if corner_color == color:
-                friendly_corners += 1
-        else:
-            off_board_corners += 1
+        corner_color = board.get(corner)
+        if corner_color == color:
+            friendly_corners += 1
+
     if off_board_corners > 0:
         return off_board_corners + friendly_corners == 4
-    return friendly_corners >= 3
+    else:
+        return friendly_corners >= 3

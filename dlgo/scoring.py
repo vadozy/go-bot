@@ -1,6 +1,6 @@
-from typing import NamedTuple, Dict, Tuple, Set, List
+from typing import NamedTuple, Tuple, Set, List, Optional, Dict, Union
 from dlgo.gotypes import Player, Point
-from dlgo.goboard_slow import Board
+from dlgo.goboard_slow import Board, GameState
 
 
 class Territory:
@@ -48,7 +48,7 @@ class GameResult(NamedTuple):
         return 'W+%.1f' % (w - self.b,)
 
 
-def evaluate_territory(board):
+def evaluate_territory(board: Board) -> Territory:
     """
     Map a board into territory and dame.
 
@@ -56,7 +56,7 @@ def evaluate_territory(board):
     counted as territory; it makes no attempt to identify even
     trivially dead groups.
     """
-    status = {}
+    status: Dict[Point, Union[Player, str]] = {}
     for r in range(1, board.num_rows + 1):
         for c in range(1, board.num_cols + 1):
             p = Point(row=r, col=c)
@@ -64,7 +64,7 @@ def evaluate_territory(board):
                 continue
             stone = board.get(p)
             if stone is not None:
-                status[p] = board.get(p)
+                status[p] = stone
             else:
                 group, neighbors = _collect_region(p, board)
                 if len(neighbors) == 1:
@@ -73,42 +73,45 @@ def evaluate_territory(board):
                     fill_with = 'territory_' + stone_str
                 else:
                     fill_with = 'dame'
+
                 for pos in group:
                     status[pos] = fill_with
     return Territory(status)
 
 
-# VADIM STOPPED HERE
-def _collect_region(start_pos: Point, board: Board, visited: Dict[Point, bool] = None) -> \
-        Tuple[List[Point], Set[Player]]:
+def _collect_region(start_pos: Point, board: Board, visited: Set[Point] = None) -> \
+        Tuple[List[Point], Set[Optional[Player]]]:
     """
     Find the contiguous section of a board containing a point. Also
     identify all the boundary points.
+
+    start_pos can be empty or it can have a player (black or white)
+    Returns List of contiguous points (empty points, usually) and set of bordering Players
+
+    For example, if start_pos is empty, the bordering player set can be {White}, {Black} or {White, Black}.
+        But also, if start_pos has White Player, the bordering player set can be {None}, {Black} or {None, Black}
     """
     if visited is None:
-        visited = {}
+        visited = set()
     if start_pos in visited:
         return [], set()
     all_points = [start_pos]
-    all_borders: Set[Player] = set()
-    visited[start_pos] = True
-    here = board.get(start_pos)
-    deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    for delta_r, delta_c in deltas:
-        next_p = Point(row=start_pos.row + delta_r, col=start_pos.col + delta_c)
-        if not board.is_on_grid(next_p):
-            continue
-        neighbor = board.get(next_p)
-        if neighbor == here:
+    all_borders: Set[Optional[Player]] = set()
+    visited.add(start_pos)
+    player_at_start_pos: Optional[Player] = board.get(start_pos)
+    next_points = board.neighbors(start_pos)
+    for next_p in next_points:
+        player_neighbor: Optional[Player] = board.get(next_p)
+        if player_neighbor == player_at_start_pos:
             points, borders = _collect_region(next_p, board, visited)
             all_points += points
             all_borders |= borders
         else:
-            all_borders.add(neighbor)
+            all_borders.add(player_neighbor)
     return all_points, all_borders
 
 
-def compute_game_result(game_state):
+def compute_game_result(game_state: GameState):
     territory = evaluate_territory(game_state.board)
     return GameResult(
             territory.num_black_territory + territory.num_black_stones,
