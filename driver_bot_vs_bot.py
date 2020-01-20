@@ -1,9 +1,11 @@
 from dlgo.goboard_slow import GameState
+import dlgo.gotypes as gotypes
 from dlgo.scoring import compute_game_result
 from dlgo.agent.random_bot import RandomBot
-from dlgo import gotypes
-from dlgo.utils import print_board, print_move
+from dlgo.utils.printing import print_board, print_move
 import time
+
+from dlgo.utils.profiling import result_str
 
 
 def main():
@@ -23,6 +25,7 @@ def main():
         game = game.apply_move(bot_move)
 
     print(compute_game_result(game))
+    print(result_str())
 
 
 if __name__ == '__main__':

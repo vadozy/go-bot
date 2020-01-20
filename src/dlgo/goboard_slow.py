@@ -1,7 +1,9 @@
 from __future__ import annotations
 import copy
-from .gotypes import Player, Point
+from dlgo.gotypes import Player, Point
 from typing import Iterable, Dict, Optional, List, Tuple, cast
+
+from dlgo.utils.profiling import timing
 
 
 class Move:
@@ -154,6 +156,7 @@ class GameState:
         board = Board(board_size, board_size)
         return GameState(board, Player.black, None, None)
 
+    @timing
     def is_move_self_capture(self, player: Player, move: Move) -> bool:
         if not move.is_play:
             return False
@@ -166,6 +169,7 @@ class GameState:
     def situation(self) -> Tuple[Player, Board]:
         return self.next_player, self.board
 
+    @timing
     def does_move_violate_ko(self, player: Player, move: Move) -> bool:
         if not move.is_play:
             return False
@@ -179,6 +183,7 @@ class GameState:
             past_state = past_state.previous_state
         return False
 
+    @timing
     def is_valid_move(self, move: Move) -> bool:
         if self.is_over():
             return False

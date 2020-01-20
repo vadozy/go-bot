@@ -7,5 +7,8 @@ setup(name='dlgo',
       url='https://github.com/vadozy/DeepLearning-Game-of-Go.git',
       install_requires=['tensorflow', 'keras', 'h5py', 'six', 'numpy'],
       license='MIT',
-      packages=find_packages(),
+
+      packages=find_packages(where='src'),
+      package_dir={'': 'src'},
+
       zip_safe=False)
