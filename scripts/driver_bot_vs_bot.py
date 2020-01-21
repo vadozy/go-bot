@@ -1,4 +1,5 @@
-from dlgo.goboard_slow import GameState
+# from dlgo.goboard_slow import GameState
+from dlgo.goboard import GameState
 import dlgo.gotypes as gotypes
 from dlgo.scoring import compute_game_result
 from dlgo.agent.random_bot import RandomBot

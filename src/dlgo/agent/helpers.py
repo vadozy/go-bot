@@ -1,5 +1,5 @@
 from dlgo.gotypes import Point, Player
-from dlgo.goboard_slow import Board
+from dlgo.goboard import Board
 from typing import List
 
 __all__ = [

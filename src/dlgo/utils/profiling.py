@@ -140,4 +140,6 @@ def result_str() -> str:
     for v in _result.values():
         ret += "\n" + str(v)
     ret += "\n" + "*** " * 30
+    ret += "\nTotal Program Time (s): {:>10.1f}".format(_total_program_execution_time())
+    ret += "\n" + "*** " * 30
     return ret

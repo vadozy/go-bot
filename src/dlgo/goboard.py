@@ -1,7 +1,8 @@
 from __future__ import annotations
 import copy
 from dlgo.gotypes import Player, Point
-from typing import Iterable, Dict, Optional, List, Tuple, cast
+from typing import Iterable, Dict, Optional, List, Tuple, cast, Set, FrozenSet
+from dlgo import zobrist
 
 from dlgo.utils.profiling import timing
 
@@ -32,19 +33,22 @@ class Move:
 
 class GoString:
     """
+    Immutable !
     Keeps track of a group of connected stones and their liberties
     """
 
     def __init__(self, color: Player, stones: Iterable[Point], liberties: Iterable[Point]):
         self.color = color
-        self.stones = set(stones)
-        self.liberties = set(liberties)
+        self.stones = frozenset(stones)
+        self.liberties = frozenset(liberties)
 
-    def remove_liberty(self, point: Point):
-        self.liberties.remove(point)
+    def without_liberty(self, point: Point):
+        new_liberties = self.liberties - {point}
+        return GoString(self.color, self.stones, new_liberties)
 
-    def add_liberty(self, point: Point):
-        self.liberties.add(point)
+    def with_liberty(self, point: Point):
+        new_liberties = self.liberties | {point}
+        return GoString(self.color, self.stones, new_liberties)
 
     def merged_with(self, go_string: GoString) -> GoString:
         assert go_string.color == self.color
@@ -63,12 +67,16 @@ class GoString:
         # and self.liberties == other.liberties
         # Last line is not needed. If color and stones are the same, liberties must be the same too.
 
+    def __deepcopy__(self, memodict=None):
+        return self
+
 
 class Board:
     def __init__(self, num_rows: int, num_cols: int):
         self.num_rows = num_rows
         self.num_cols = num_cols
         self._grid: Dict[Point, Optional[GoString]] = {}
+        self._hash = zobrist.EMPTY_BOARD
 
     @timing
     def place_stone(self, player: Player, point: Point):
@@ -87,16 +95,26 @@ class Board:
             else:
                 if neighbor_string not in adjacent_opposite_color:
                     adjacent_opposite_color.append(neighbor_string)
+
         new_string = GoString(player, [point], liberties)
+
         for same_color_string in adjacent_same_color:
             new_string = new_string.merged_with(same_color_string)
         for new_string_point in new_string.stones:
             self._grid[new_string_point] = new_string
+
+        self._hash ^= zobrist.HASH_CODE[point, player]
+
         for other_color_string in adjacent_opposite_color:
-            other_color_string.remove_liberty(point)
-        for other_color_string in adjacent_opposite_color:
-            if other_color_string.num_liberties == 0:
+            replacement = other_color_string.without_liberty(point)
+            if replacement.num_liberties:
+                self._replace_string_in_grid(replacement)
+            else:
                 self._remove_string(other_color_string)
+
+    def _replace_string_in_grid(self, new_string: GoString):
+        for point in new_string.stones:
+            self._grid[point] = new_string
 
     def _remove_string(self, string: GoString):
         for point in string.stones:
@@ -105,8 +123,9 @@ class Board:
                 if neighbor_string is None:
                     continue
                 if neighbor_string is not string:
-                    neighbor_string.add_liberty(point)
+                    self._replace_string_in_grid(neighbor_string.with_liberty(point))
             self._grid[point] = None
+            self._hash ^= zobrist.HASH_CODE[point, string.color]
 
     def is_on_grid(self, point: Point) -> bool:
         return 1 <= point.row <= self.num_rows and 1 <= point.col <= self.num_cols
@@ -139,13 +158,31 @@ class Board:
                self.num_cols == other.num_cols and \
                self._grid == other._grid
 
+    def __deepcopy__(self, memodict=None):
+        copied = Board(self.num_rows, self.num_cols)
+        # Can do a shallow copy b/c the dictionary maps tuples
+        # (immutable) to GoStrings (also immutable)
+        copied._grid = copy.copy(self._grid)
+        copied._hash = self._hash
+        return copied
+
+    def zobrist_hash(self):
+        return self._hash
+
 
 class GameState:
-    def __init__(self, board: Board, next_player: Player, previous: Optional[GameState], move: Optional[Move]):
+    def __init__(self, board: Board, next_player: Player, previous_state: Optional[GameState],
+                 last_move: Optional[Move]):
         self.board = board
         self.next_player = next_player
-        self.previous_state = previous
-        self.last_move = move
+        self.previous_state = previous_state
+        self.last_move = last_move
+        if previous_state is None:
+            self.previous_states: FrozenSet[Tuple[Player, int]] = frozenset()
+        else:
+            self.previous_states = frozenset(previous_state.previous_states | {
+                (previous_state.next_player, previous_state.board.zobrist_hash())
+            })
 
     def apply_move(self, move: Move) -> GameState:
         if move.is_play:
@@ -179,14 +216,9 @@ class GameState:
         if not move.is_play:
             return False
         next_board = copy.deepcopy(self.board)
-        next_board.place_stone(player, cast(Point, move.point))
-        next_situation = (player.opposite, next_board)
-        past_state = self.previous_state
-        while past_state is not None:
-            if past_state.situation == next_situation:
-                return True
-            past_state = past_state.previous_state
-        return False
+        next_board.place_stone(player, move.point)
+        next_situation = (player.opposite, next_board.zobrist_hash())
+        return next_situation in self.previous_states
 
     @timing
     def is_valid_move(self, move: Move) -> bool:

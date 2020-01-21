@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dlgo.goboard_slow import GameState, Move
+from dlgo.goboard import GameState, Move
 
 __all__ = [
     'Agent',

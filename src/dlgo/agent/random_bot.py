@@ -1,7 +1,7 @@
 import random
 from .base import Agent
 from .helpers import is_point_an_eye
-from ..goboard_slow import Move, GameState
+from ..goboard import Move, GameState
 from ..gotypes import Point
 
 __all__ = ['RandomBot']
