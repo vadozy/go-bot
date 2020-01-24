@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .scoring import compute_game_result
 import copy
 from dlgo.gotypes import Player, Point
 from typing import Iterable, Dict, Optional, List, Tuple, cast, Set, FrozenSet
@@ -255,7 +256,6 @@ class GameState:
         return moves
 
     def winner(self) -> Optional[Player]:
-        from .scoring import compute_game_result  # Cannot move import to the top, because of circular dependency
         if not self.is_over():
             return None
         if self.last_move and self.last_move.is_resign:

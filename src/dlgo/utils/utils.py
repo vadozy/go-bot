@@ -1,6 +1,7 @@
+from __future__ import annotations
+import dlgo.goboard as goboard
 import numpy as np
 from dlgo import gotypes
-from dlgo.goboard_slow import Move, Board
 from typing import cast
 
 COLS = 'ABCDEFGHJKLMNOPQRST'
@@ -11,7 +12,7 @@ STONE_TO_CHAR = {
 }
 
 
-def print_move(player: gotypes.Player, move: Move):
+def print_move(player: gotypes.Player, move: goboard.Move):
     if move.is_pass:
         move_str = 'passes'
     elif move.is_resign:
@@ -50,7 +51,7 @@ def coords_from_point(point):
 # This feature will only be implemented in goboard_fast.py so as not to confuse
 # readers in early chapters.
 class MoveAge:
-    def __init__(self, board: Board):
+    def __init__(self, board: goboard.Board):
         self.move_ages = - np.ones((board.num_rows, board.num_cols))
 
     def get(self, row, col):

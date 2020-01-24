@@ -1,7 +1,7 @@
+from __future__ import annotations
+import dlgo.goboard as goboard
 from typing import NamedTuple, Tuple, Set, List, Optional, Dict, Union
 from dlgo.gotypes import Player, Point
-from dlgo.goboard import Board, GameState
-from dlgo.goboard_slow import GameState as GameState_slow, Board as Board_slow
 
 
 class Territory:
@@ -49,7 +49,7 @@ class GameResult(NamedTuple):
         return 'W+%.1f' % (w - self.b,)
 
 
-def evaluate_territory(board: Union[Board, Board_slow]) -> Territory:
+def evaluate_territory(board: goboard.Board) -> Territory:
     """
     Map a board into territory and dame.
 
@@ -80,7 +80,7 @@ def evaluate_territory(board: Union[Board, Board_slow]) -> Territory:
     return Territory(status)
 
 
-def _collect_region(start_pos: Point, board: Union[Board, Board_slow], visited: Set[Point] = None) -> \
+def _collect_region(start_pos: Point, board: goboard.Board, visited: Set[Point] = None) -> \
         Tuple[List[Point], Set[Optional[Player]]]:
     """
     Find the contiguous section of a board containing a point. Also
@@ -112,7 +112,7 @@ def _collect_region(start_pos: Point, board: Union[Board, Board_slow], visited: 
     return all_points, all_borders
 
 
-def compute_game_result(game_state: Union[GameState, GameState_slow]):
+def compute_game_result(game_state: goboard.GameState):
     territory = evaluate_territory(game_state.board)
     return GameResult(
             territory.num_black_territory + territory.num_black_stones,
