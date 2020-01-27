@@ -68,6 +68,9 @@ class GoString:
         # and self.liberties == other.liberties
         # Last line is not needed. If color and stones are the same, liberties must be the same too.
 
+    def __hash__(self) -> int:
+        return hash(self.color) ^ hash(self.stones) ^ hash(self.liberties)
+
     def __deepcopy__(self, memodict=None):
         return self
 

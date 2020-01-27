@@ -1,4 +1,4 @@
-from dlgo.agent.random_bot import RandomBot
+from dlgo.agent.random_bot import RandomAgent
 from dlgo.agent.base import Agent
 from dlgo.goboard import GameState, Move
 from dlgo import gotypes
@@ -9,7 +9,7 @@ from dlgo.utils import print_board, print_move, point_from_coords
 def main():
     board_size = 9
     game: GameState = GameState.new_game(board_size)
-    bot: Agent = RandomBot()
+    bot: Agent = RandomAgent()
 
     move: Move = None
     while not game.is_over():
