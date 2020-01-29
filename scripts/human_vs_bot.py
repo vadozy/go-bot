@@ -3,7 +3,7 @@ from dlgo.agent.base import Agent
 from dlgo.goboard import GameState, Move
 from dlgo import gotypes
 from dlgo.scoring import compute_game_result
-from dlgo.utils import print_board, print_move, point_from_coords
+from dlgo.utils.utils import print_board, print_move, point_from_coords
 
 
 def main():

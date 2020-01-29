@@ -133,6 +133,7 @@ def result() -> Dict[str, FunctionProfilingData]:
 def result_str() -> str:
     ret = "### " * 30 + "\n"
     ret += "FUNCTION EXECUTION TIME REPORT\n"
+    ret += "CLEAN Program Time (s): {:>10.1f}\n".format(_total_program_execution_time())
     ret += "*** " * 30 + "\n"
     ret += _FORMAT_STR_HEADER.format("Function Name", "TOTAL", "Percent", "Calls", "Min", "Mean", "Median", "Max", "Stdev")
     ret += "\n" + _FORMAT_STR_HEADER.format("", "sec", "", "times", "ms", "ms", "ms", "ms", "ms")

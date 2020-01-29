@@ -17,6 +17,7 @@ def main():
         # gotypes.Player.black: RandomBot(),
         # gotypes.Player.black: AlphaBetaAgent(max_depth=0, ev_fn=eval_fn2),
         # gotypes.Player.white: RandomAgent(),
+        # gotypes.Player.black: RandomAgent(),
         gotypes.Player.black: AlphaBetaAgent(max_depth=1, ev_fn=eval_fn),
         gotypes.Player.white: AlphaBetaAgent(max_depth=0, ev_fn=eval_fn2),
     }

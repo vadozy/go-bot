@@ -1,6 +1,7 @@
 import random
 
 from .base import Agent
+from .helpers import is_point_an_eye
 from dlgo.goboard import GameState, Move
 from typing import List
 from dlgo.minimax.alphabeta import alphabeta
@@ -21,6 +22,8 @@ class AlphaBetaAgent(Agent):
         best_score = float("-inf")
         # Loop over all legal moves.
         for possible_move in game_state.legal_moves():
+            if possible_move.point and is_point_an_eye(game_state.board, possible_move.point, game_state.next_player):
+                continue  # skip the eye
             next_state = game_state.apply_move(possible_move)
             result = alphabeta(next_state, False, game_state.next_player, self.max_depth, ev_fn=self.ev_fn)
             if (not best_moves) or result > best_score:

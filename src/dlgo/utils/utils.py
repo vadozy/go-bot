@@ -34,22 +34,19 @@ def print_board(board):
     print('    ' + '  '.join(COLS[:board.num_cols]))
 
 
-def point_from_coords(coords):
+def point_from_coords(coords) -> gotypes.Point:
     col = COLS.index(coords[0]) + 1
     row = int(coords[1:])
     return gotypes.Point(row=row, col=col)
 
 
-def coords_from_point(point):
+def coords_from_point(point: gotypes.Point):
     return '%s%d' % (
         COLS[point.col - 1],
         point.row
     )
 
 
-# NOTE: MoveAge is only used in chapter 13, and doesn't make it to the main text.
-# This feature will only be implemented in goboard_fast.py so as not to confuse
-# readers in early chapters.
 class MoveAge:
     def __init__(self, board: goboard.Board):
         self.move_ages = - np.ones((board.num_rows, board.num_cols))

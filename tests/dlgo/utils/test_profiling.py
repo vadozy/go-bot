@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dlgo.utils.profiling import timing, result, FunctionProfilingData
 import time
 
