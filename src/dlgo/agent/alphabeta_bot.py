@@ -6,8 +6,6 @@ from dlgo.goboard import GameState, Move
 from typing import List
 from dlgo.minimax.alphabeta import alphabeta
 
-from dlgo.utils.profiling import timing
-
 
 class AlphaBetaAgent(Agent):
 
@@ -16,7 +14,6 @@ class AlphaBetaAgent(Agent):
         self.max_depth = max_depth
         self.ev_fn = ev_fn
 
-    @timing
     def select_move(self, game_state: GameState):
         best_moves: List[Move] = []
         best_score = float("-inf")

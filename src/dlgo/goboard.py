@@ -6,6 +6,8 @@ from dlgo import zobrist
 from dlgo.utils.utils import MoveAge
 from typing import Tuple, Dict, List, Iterable, Optional, FrozenSet, cast
 
+from dlgo.utils.profiling import timing
+
 __all__ = [
     'Board',
     'GameState',
@@ -88,19 +90,6 @@ class GoString:
     def num_liberties(self) -> int:
         return len(self.liberties)
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, GoString) and \
-               self.color == other.color and \
-               self.stones == other.stones
-        # and self.liberties == other.liberties
-        # Last line is not needed. If color and stones are the same, liberties must be the same too.
-
-    def __hash__(self) -> int:
-        return hash(self.color) ^ hash(self.stones) ^ hash(self.liberties)
-
-    def __deepcopy__(self, memodict=None):
-        return self
-
 
 class Board:
     def __init__(self, num_rows: int, num_cols: int):
@@ -118,11 +107,9 @@ class Board:
         self.corner_table = corner_tables[dim]
         self.move_ages = MoveAge(self)
 
-    # TODO Not used?
     def neighbors(self, point) -> List[Point]:
         return self.neighbor_table[point]
 
-    # TODO Not used?
     def corners(self, point) -> List[Point]:
         return self.corner_table[point]
 
@@ -130,6 +117,7 @@ class Board:
         assert self.is_on_grid(point)
         if self._grid.get(point) is not None:
             print('Illegal play on %s' % str(point))
+            raise IllegalMoveError()
         assert self._grid.get(point) is None
         adjacent_same_color: List[GoString] = []
         adjacent_opposite_color: List[GoString] = []
@@ -182,7 +170,7 @@ class Board:
 
     def is_self_capture(self, player: Player, point: Point) -> bool:
         friendly_strings = []
-        for neighbor in self.neighbor_table[point]:
+        for neighbor in self.neighbors(point):
             neighbor_string = self._grid.get(neighbor)
             if neighbor_string is None:
                 # This point has a liberty. Can't be self capture.
@@ -227,13 +215,13 @@ class Board:
         return isinstance(other, Board) and \
                self.num_rows == other.num_rows and \
                self.num_cols == other.num_cols and \
-               self._hash() == other._hash()
+               self._hash == other._hash
 
     def __deepcopy__(self, memodict=None):
         copied = Board(self.num_rows, self.num_cols)
         # Can do a shallow copy b/c the dictionary maps tuples
         # (immutable) to GoStrings (also immutable)
-        copied._grid = copy.copy(self._grid)
+        copied._grid = self._grid.copy()
         copied._hash = self._hash
         return copied
 

@@ -1,12 +1,8 @@
 from dlgo.goboard import GameState
 import dlgo.gotypes as gotypes
 from dlgo.scoring import compute_game_result
-from dlgo.agent.random_bot import RandomAgent, FastRandomAgent
-from dlgo.agent.alphabeta_bot import AlphaBetaAgent
 from dlgo.mcts.mcts import MCTSAgent
 from dlgo.utils.utils import print_board, print_move
-from dlgo.minimax.alphabeta import eval_fn, eval_fn2
-import time
 
 from dlgo.utils.profiling import result_str
 
@@ -15,18 +11,10 @@ def main():
     board_size = 7
     game: GameState = GameState.new_game(board_size)
     bots = {
-        # gotypes.Player.black: RandomBot(),
-        # gotypes.Player.black: AlphaBetaAgent(max_depth=0, ev_fn=eval_fn2),
-        # gotypes.Player.white: RandomAgent(),
-        # gotypes.Player.black: RandomAgent(),
-        # gotypes.Player.white: FastRandomAgent(),
-        # gotypes.Player.black: FastRandomAgent(),
-        # gotypes.Player.black: AlphaBetaAgent(max_depth=1, ev_fn=eval_fn),
         gotypes.Player.white: MCTSAgent(10000, temperature=1.4),
-        gotypes.Player.black: AlphaBetaAgent(max_depth=3, ev_fn=eval_fn2),
+        gotypes.Player.black: MCTSAgent(10000, temperature=1.8),
     }
     while not game.is_over():
-        # time.sleep(0.5)
         bot_move = bots[game.next_player].select_move(game)
         game = game.apply_move(bot_move)
 
