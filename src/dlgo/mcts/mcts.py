@@ -4,14 +4,15 @@ Monte Carlo tree search
 from __future__ import annotations
 import math
 import random
+import copy
+import zmq
 
+from typing import Dict, List, Optional, Tuple, cast
 from dlgo.agent.base import Agent
 from dlgo.agent.helpers import is_point_an_eye
 from dlgo.agent.random_bot import FastRandomAgent
 from dlgo.goboard import GameState, Move, Board
 from dlgo.gotypes import Player
-from dlgo.utils.utils import coords_from_point
-from typing import Dict, List, Optional, Tuple, cast
 
 
 class MCTSNode:
@@ -53,7 +54,7 @@ class MCTSNode:
 
 
 class MCTSAgent(Agent):
-    def __init__(self, num_rounds: int, temperature: float):
+    def __init__(self, num_rounds: int, temperature: float, parallel_rollouts: bool = False):
         """
         temperature: around 1.5
                     Hotter (greater) means search what seems to be bad moves a bit more.
@@ -62,6 +63,14 @@ class MCTSAgent(Agent):
         super().__init__()
         self.num_rounds = num_rounds
         self.temperature = temperature
+        self.parallel_rollouts = parallel_rollouts
+
+        if self.parallel_rollouts:
+            self.context = zmq.Context()
+            #  Socket to talk to server
+            print("Connecting to sim_games parallel games server...")
+            self.socket = self.context.socket(zmq.REQ)
+            self.socket.connect("tcp://localhost:5555")
 
     def select_move(self, game_state) -> Move:
         root: MCTSNode = MCTSNode(game_state)
@@ -76,12 +85,16 @@ class MCTSAgent(Agent):
                 node = node.add_random_child()
 
             # Simulate a random game from this node.
-            winner = self.simulate_random_game(node.game_state)
+            if self.parallel_rollouts:
+                winners = self.simulate_parallel_random_games(node.game_state)
+            else:
+                winners = [self.simulate_random_game(node.game_state)]
 
             # Propagate scores back up the tree.
             tmp_node: Optional[MCTSNode] = node
             while tmp_node is not None:
-                tmp_node.increment_win(winner)
+                for winner in winners:
+                    tmp_node.increment_win(winner)
                 tmp_node = tmp_node.parent
 
         scored_moves: List[Tuple[float, Move, int]] = [
@@ -118,7 +131,7 @@ class MCTSAgent(Agent):
         return cast(MCTSNode, best_child)
 
     @staticmethod
-    def simulate_random_game(game):
+    def simulate_random_game(game: GameState) -> Player:
         bots = {
             Player.black: FastRandomAgent(),
             Player.white: FastRandomAgent(),
@@ -126,7 +139,18 @@ class MCTSAgent(Agent):
         while not game.is_over():
             bot_move = bots[game.next_player].select_move(game)
             game = game.apply_move(bot_move)
-        return game.winner()
+        return cast(Player, game.winner())
+
+    def simulate_parallel_random_games(self, game: GameState) -> List[Player]:
+        game_with_nomore_than_one_parent = game
+        parent = game.previous_state
+        if parent is not None:
+            board = copy.deepcopy(parent.board)
+            parent_copy = GameState(board, parent.next_player, None, parent.last_move)
+            game_with_nomore_than_one_parent.previous_state = parent_copy
+        self.socket.send_pyobj(game_with_nomore_than_one_parent)
+        results: List[Player] = self.socket.recv_pyobj()
+        return results
 
 
 # Helper functions to print MCTS tree info

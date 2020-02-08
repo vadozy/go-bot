@@ -22,8 +22,8 @@ def main():
         # gotypes.Player.white: FastRandomAgent(),
         # gotypes.Player.black: FastRandomAgent(),
         # gotypes.Player.black: AlphaBetaAgent(max_depth=1, ev_fn=eval_fn),
-        gotypes.Player.white: MCTSAgent(10000, temperature=1.4),
-        gotypes.Player.black: AlphaBetaAgent(max_depth=3, ev_fn=eval_fn2),
+        gotypes.Player.black: MCTSAgent(2500, temperature=1.4, parallel_rollouts=True),
+        gotypes.Player.white: AlphaBetaAgent(max_depth=3, ev_fn=eval_fn2),
     }
     while not game.is_over():
         # time.sleep(0.5)

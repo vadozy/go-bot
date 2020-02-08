@@ -11,8 +11,9 @@ def main():
     board_size = 7
     game: GameState = GameState.new_game(board_size)
     bots = {
-        gotypes.Player.white: MCTSAgent(10000, temperature=1.4),
-        gotypes.Player.black: MCTSAgent(10000, temperature=1.8),
+        # gotypes.Player.white: MCTSAgent(4000, temperature=1.4),
+        gotypes.Player.white: MCTSAgent(5000, temperature=1.4, parallel_rollouts=True),
+        gotypes.Player.black: MCTSAgent(5000, temperature=1.1, parallel_rollouts=True),
     }
     while not game.is_over():
         bot_move = bots[game.next_player].select_move(game)
