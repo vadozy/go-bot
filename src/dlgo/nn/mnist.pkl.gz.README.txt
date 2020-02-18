@@ -1,0 +1,9 @@
+https://vadozy.s3.amazonaws.com/mnist.pkl.gz
+
+Images in the MNIST data set are squares with height and width of 28 pixels.
+Load image data into feature vectors of size 784 = 28 × 28; discard the image structure altogether and
+look only at pixels represented as a vector. Each value of this vector represents a grayscale value
+between 0 and 1, with 0 being white and 1 black.
+
+The pickled data in mnist.pkl.gz: three sets of data: training, validation, and test data. Each set is a tuple (or list)
+ of 2 elements: List of np.ndarray of shape (784,) and List of labels of type int.
