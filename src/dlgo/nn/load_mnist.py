@@ -2,7 +2,7 @@ import os
 import gzip
 import pickle
 import numpy as np
-from typing import List, Tuple, Iterator
+from typing import Tuple, Iterator
 
 
 def encode_label(j: int) -> np.ndarray:
